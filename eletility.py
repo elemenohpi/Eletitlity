@@ -43,25 +43,55 @@ class DB:
         self.cursor.execute(cmd)
         self.conn.commit()
 
-    def insertUnique(self, table, condition, values):
+    def insertUnique(self, table, col, values):
         """ inserts a row to a table if a condition is met """
-        cmd = "INSERT INTO {} VALUES {} WHERE NOT EXISTS(SELECT 1 FROM memos WHERE id=5 AND text='text to insert')
-"
+        uniqueVal = None
+        keys = "("
+        vals = "("
+        for key in values:
+            if key == col:
+                uniqueVal = values[key]
+            vals += "'{}', ".format(values[key])
+            keys += "{}, ".format(key)
+        vals = vals[:len(vals)-2] + ")"
+        keys = keys[:len(keys)-2] + ")"
+        cmd = "INSERT INTO {0} {1} SELECT {2} WHERE NOT EXISTS (SELECT 1 FROM {0} WHERE {3}='{4}')".format(table, keys, vals, col, uniqueVal)        
+        self.cursor.execute(cmd)
+        self.conn.commit()
+
+    # def selectOne(self, table, condition=""):
+    #     cmd = "SELECT 1 from {table} WHERE {condition}".format(table, condition)
+        
+
+    def selectAll(self, table, condition="TRUE"):
+        """ returns all the rows of a given table which meet a given condition """
+        cmd = "SELECT * from {0} WHERE {1}".format(table, condition)
+        self.cursor.execute(cmd)
+        return self.cursor.fetchall()
         
        
-    def insert(self, table, values, condition=False):
+    def insert(self, table, values, condition=""):
         """ inserts a row to a table """
         keys = "("
         vals = "("
         for key in values:
-            vals += "`{}`, ".format(values[key])
+            vals += "'{}', ".format(values[key])
             keys += "{}, ".format(key)
         vals = vals[:len(vals)-2] + ")"
         keys = keys[:len(keys)-2] + ")"
         cmd = "INSERT INTO {} {} VALUES {}".format(table, keys, vals)
-        if not condition
+        if condition != "":
+            cmd += condition
+
         self.cursor.execute(cmd)
         self.conn.commit()
+
+    def delete(self, table, condition):
+        """ deletes row(s) from a given table which meet a given condition """
+        cmd = "DELETE FROM {} WHERE {}".format(table, condition)
+        self.cursor.execute(cmd)
+        self.conn.commit()
+
 
 ######################## PATHHELPER ########################
 

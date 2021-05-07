@@ -23,13 +23,13 @@ class DB:
     def tables(self):
         """ returns a list containing all the table names """
         self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        return self.cursor.fetchall()[0]
+        return self.cursor.fetchall()
 
     def tableExists(self, key):
         """ returns true if the given table name exists"""
         tables = self.tables()
         for name in tables:
-            if name == key:
+            if name[0] == key:
                 return True
         return False
     
@@ -59,16 +59,25 @@ class DB:
         self.cursor.execute(cmd)
         self.conn.commit()
 
-    # def selectOne(self, table, condition=""):
-    #     cmd = "SELECT 1 from {table} WHERE {condition}".format(table, condition)
+    def selectOne(self, table, condition=""):
+        """ returns one rows of a given table which meets a given condition """
+        cmd = "SELECT 1 from {0} WHERE {1}".format(table, condition)
+        self.cursor.execute(cmd)
+        return self.cursor.fetchone()
         
-
     def selectAll(self, table, condition="TRUE"):
         """ returns all the rows of a given table which meet a given condition """
         cmd = "SELECT * from {0} WHERE {1}".format(table, condition)
         self.cursor.execute(cmd)
         return self.cursor.fetchall()
-        
+    
+    def rowExists(self, table, condition="TRUE"):
+        """ determines if a row exits in a table with a given condition """
+        cmd = "SELECT * from {0} WHERE {1}".format(table, condition)
+        self.cursor.execute(cmd)
+        if len(self.cursor.fetchall()) < 1:
+            return False
+        return True
        
     def insert(self, table, values, condition=""):
         """ inserts a row to a table """
@@ -86,6 +95,17 @@ class DB:
         self.cursor.execute(cmd)
         self.conn.commit()
 
+    def update(self, table, values, condition):
+        """ inserts a row to a table """
+        keyval = ""
+        for key in values:
+            keyval += "{} = '{}',".format(key, values[key])
+        keyval = keyval[:len(keyval)-1]
+        cmd = "UPDATE {} SET {} WHERE {}".format(table, keyval, condition)
+
+        self.cursor.execute(cmd)
+        self.conn.commit()    
+
     def delete(self, table, condition):
         """ deletes row(s) from a given table which meet a given condition """
         cmd = "DELETE FROM {} WHERE {}".format(table, condition)
@@ -98,8 +118,9 @@ class DB:
 class PathHelper:
     def __init__(self):
         pass
-
+    
     def absPath(self, file):
+        """ returns the absolute path to a given relative path """
         return os.path.abspath(file)
 
 ######################## VALIDATOR ########################
@@ -142,7 +163,7 @@ class Validator:
     def isNum(self, str, required=False):
         if not required:
             if len(str) < 1:
-                return True
+                return False
         elif str.isnumeric():
             return True
         return False
@@ -158,3 +179,77 @@ class StringProc:
 #         connection = sqlite3.connect(path)
 #         print("Successfully Connected")
 
+########################## FILES ##########################
+
+class Files:
+    def __init__(self):
+        pass
+
+    def truncate(self, file, create=True):
+        """ truncates a given file (creates a file if it doesn't exist) """
+        try:
+            f = open(file)
+            f.truncate()
+        except IOError:
+            if create:
+                f = open(file, "w+")
+                f.close()
+                return 1
+            return 0
+        return 1
+
+    def write_line(self, file, str, create=True):
+        """ appends a line to a file """
+        try:
+            f = open(file, "a")
+            f.write(str)
+            f.write("\n")
+        except IOError:
+            if create:
+                f = open(file, "w+")
+                f.write(str)
+                f.write("\n")
+                f.close()
+                return 1
+            return 0
+        finally:
+            f.close()
+        return 1
+
+    def write(self, file, str, create=True):
+        """ writes into a file (doesn't end the line)"""
+        try:
+            f = open(file, "a")
+            f.write(str)
+        except IOError:
+            if create:
+                f = open(file, "w+")
+                f.write(str)
+                f.close()
+                return 1
+            return 0
+        finally:
+            f.close()
+        return 1
+
+    def writeTruncate(self, file, str, create=True):
+        """ truncates a file and writes into it """
+        self.truncate(file, create)
+        self.write(file, str)
+
+    def lbreak(self, file, create=False):
+        """ appends a line break to a file """
+        try:
+            f = open(file, "a")
+            f.write("\n")
+        except IOError:
+            if create:
+                f = open(file, "w+")
+                f.write("\n")
+                f.close()
+                return 1
+            return 0
+        finally:
+            f.close()
+        return 1
+        pass

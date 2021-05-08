@@ -42,9 +42,22 @@ class DB:
         cmd += ")"
         self.cursor.execute(cmd)
         self.conn.commit()
-
-    def insertUnique(self, table, col, values):
+    
+    def insertUnique(self, table, values, condition = True):
         """ inserts a row to a table if a condition is met """
+        keys = "("
+        vals = ""
+        for key in values:
+            vals += "'{}', ".format(values[key])
+            keys += "{}, ".format(key)
+        vals = vals[:len(vals)-2] + ""
+        keys = keys[:len(keys)-2] + ")"
+        cmd = "INSERT INTO {0} {1} SELECT {2} WHERE NOT EXISTS (SELECT 1 FROM {0} WHERE {3})".format(table, keys, vals, condition)       
+        self.cursor.execute(cmd)
+        self.conn.commit()
+
+    def insertUniqueCol(self, table:str, col:str, values:list):
+        """ inserts a row to a table if a single condition is met """
         uniqueVal = None
         keys = "("
         vals = "("
@@ -79,7 +92,7 @@ class DB:
             return False
         return True
        
-    def insert(self, table, values, condition=""):
+    def insert(self, table, values, condition="TRUE"):
         """ inserts a row to a table """
         keys = "("
         vals = "("
@@ -88,9 +101,7 @@ class DB:
             keys += "{}, ".format(key)
         vals = vals[:len(vals)-2] + ")"
         keys = keys[:len(keys)-2] + ")"
-        cmd = "INSERT INTO {} {} VALUES {}".format(table, keys, vals)
-        if condition != "":
-            cmd += condition
+        cmd = "INSERT INTO {} {} VALUES {} WHERE {}".format(table, keys, vals, condition)
 
         self.cursor.execute(cmd)
         self.conn.commit()
@@ -253,3 +264,40 @@ class Files:
             f.close()
         return 1
         pass
+
+########################## Times ##########################
+
+class Times:
+    def __init__(self):
+        """ Date time helper functions"""
+        pass
+    
+    def monthS2N(self, month):
+        """ converts a month string to its corresponding numberical value """
+        month = month.lower()
+        if month == "jan" or month == "january":
+            return "01"
+        elif month == "feb" or month == "february":
+            return "02"
+        elif month == "mar" or month == "march":
+            return "03"
+        elif month == "apr" or month == "april":
+            return "04"
+        elif month == "may" or month == "may":
+            return "05"
+        elif month == "jun" or month == "june":
+            return "06"
+        elif month == "jul" or month == "july":
+            return "07"
+        elif month == "aug" or month == "august":
+            return "08"
+        elif month == "sep" or month == "september":
+            return "09"
+        elif month == "oct" or month == "october":
+            return "10"
+        elif month == "nov" or month == "november":
+            return "11"
+        elif month == "dec" or month == "december":
+            return "12"
+        else:
+            raise "invalid month"

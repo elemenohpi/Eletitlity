@@ -209,7 +209,7 @@ class Files:
             return 0
         return 1
 
-    def write_line(self, file, str, create=True):
+    def writeLine(self, file, str, create=True):
         """ appends a line to a file """
         try:
             f = open(file, "a")

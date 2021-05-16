@@ -349,7 +349,7 @@ class Colors:
     DEBUG = '\033[96m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
-    FAIL = '\033[91m'
+    ERROR = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
@@ -381,6 +381,15 @@ class Log:
         message = "{}:{}".format(time, message)
         if self.level == "warning" or "debug" or "info":
             print(Colors.WARNING, message, Colors.ENDC)
+    
+    def E(self, message):
+        time = Times().now() 
+        if not self.prefix is None:
+            message = "{}:{}".format(self.prefix, message)
+        message = "{}:{}".format(time, message)
+        if self.level == "warning" or "debug" or "info":
+            print(Colors.ERROR, message, Colors.ENDC)
+        exit()
     
 
 

@@ -1,5 +1,5 @@
 import os
-import datetime
+import datetime, time
 import sqlite3
 from sqlite3 import Error
 
@@ -302,6 +302,11 @@ class Times:
         else:
             raise "invalid month"
 
+    def now(self):
+        now = datetime.datetime.now().time()
+        return now
+        pass
+
 ########################## ConfigParser ##########################
 
 class ConfigParser:
@@ -337,3 +342,47 @@ class ConfigParser:
                     config[tokens[0].strip()] = tokens[1].strip()
         
         return config
+
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    DEBUG = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+class Log:
+    def __init__(self, level="info", prefix=None) -> None:
+        # if level == "warning":
+        #     level = logging.WARNING
+        # elif level == "debug":
+        #     level = logging.DEBUG
+        # else:
+        #     level = logging.WARNING
+        self.level = level
+        self.prefix = prefix
+        pass
+
+    def D(self, message):
+        time = Times().now() 
+        if not self.prefix is None:
+            message = "{}:{}".format(self.prefix, message)
+        message = "{}:{}".format(time, message)
+        if self.level == "debug":
+            print(Colors.DEBUG, message, Colors.ENDC)
+    
+    def W(self, message):
+        time = Times().now() 
+        if not self.prefix is None:
+            message = "{}:{}".format(self.prefix, message)
+        message = "{}:{}".format(time, message)
+        if self.level == "warning" or "debug" or "info":
+            print(Colors.WARNING, message, Colors.ENDC)
+    
+
+
+# ToDo:: 
+# 1- configparser should use small case everywhere

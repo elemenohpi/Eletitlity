@@ -307,6 +307,13 @@ class Times:
         return now
         pass
 
+    def substract(self, endtime, starttime):
+        date = datetime.date(1, 1, 1)
+        startDateTime = datetime.datetime.combine(date, starttime)
+        endDateTime = datetime.datetime.combine(date, endtime)
+        diff = endDateTime - startDateTime
+        return diff
+
 ########################## ConfigParser ##########################
 
 class ConfigParser:
@@ -382,11 +389,19 @@ class Log:
         if self.level == "warning" or "debug" or "info":
             print(Colors.WARNING, message, Colors.ENDC)
     
-    def E(self, message):
+    def I(self, message):
         time = Times().now() 
         if not self.prefix is None:
             message = "{}:{}".format(self.prefix, message)
         message = "{}:{}".format(time, message)
+        if self.level == "warning" or "debug" or "info":
+            print(Colors.OKGREEN, message, Colors.ENDC)
+    
+    def E(self, message):
+        time = Times().now() 
+        if not self.prefix is None:
+            message = "{}:{}".format(self.prefix, message)
+        message = "{}:ERROR:{}".format(time, message)
         if self.level == "warning" or "debug" or "info":
             print(Colors.ERROR, message, Colors.ENDC)
         exit()

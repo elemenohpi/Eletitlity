@@ -350,6 +350,8 @@ class ConfigParser:
         
         return config
 
+########################## Colors ##########################
+
 class Colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -360,6 +362,8 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+########################## Log ##########################
 
 class Log:
     def __init__(self, level="info", prefix=None) -> None:
@@ -405,8 +409,14 @@ class Log:
         if self.level == "warning" or "debug" or "info":
             print(Colors.ERROR, message, Colors.ENDC)
         exit()
-    
 
+########################## List ##########################
 
-# ToDo:: 
-# 1- configparser should use small case everywhere
+class List:
+    def __init__(self) -> None:
+        pass
+
+    def sort_list_by_obj_pos(self, list):
+        for element in list:
+            pos = 
+        pass

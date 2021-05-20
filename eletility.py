@@ -415,8 +415,3 @@ class Log:
 class List:
     def __init__(self) -> None:
         pass
-
-    def sort_list_by_obj_pos(self, list):
-        for element in list:
-            pos = 
-        pass

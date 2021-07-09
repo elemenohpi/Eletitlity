@@ -377,6 +377,13 @@ class Log:
         self.prefix = prefix
         pass
 
+    def alive_print(self, message):
+        for char in message:
+            print(char, end="", flush=True)
+            time.sleep(0.03)
+            print(char, end="")
+            
+
     def D(self, message):
         time = Times().now() 
         if not self.prefix is None:

@@ -2,11 +2,47 @@ import os
 import datetime, time
 import sqlite3
 from sqlite3 import Error
+import json
 
 ######################## DB ########################
 class DB:
     def __init__(self):
         pass
+
+    def migrate(self, file):
+        content = open(file)
+        data = json.load(content)
+        db_name = data["name"]
+        self.connect(db_name)
+
+        for index, table in enumerate(data):
+            if index == 0:
+                continue
+
+            conf = {}
+            conf["id"] = "INTEGER PRIMARY KEY"
+
+            for column in data[table]:
+                conf[column] = data[table][column].upper()
+
+            # check if the table exists
+            if not self.tableExists(table):
+                # table doesn't exist, create it
+                self.createTable(table, conf)
+            else:
+                # table exists, check columns
+                for index, column in  enumerate(self.tableInfo(table)):
+                    if column[1] != list(conf.keys())[index]
+                        8
+                exit()
+                
+
+        print(self.tables())
+        exit()
+            
+    def tableInfo(self, table):
+        return self.conn.execute('PRAGMA TABLE_INFO({})'.format(table)).fetchall()
+            
 
     def connect(self, db_file):
         """ connects to or creates a database connection to a SQLite database """
@@ -380,9 +416,8 @@ class Log:
     def alive_print(self, message):
         for char in message:
             print(char, end="", flush=True)
-            time.sleep(0.03)
-            print(char, end="")
-            
+            time.sleep(0.03)     
+        print("")       
 
     def D(self, message):
         time = Times().now() 

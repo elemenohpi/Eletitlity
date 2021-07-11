@@ -31,10 +31,14 @@ class DB:
                 self.createTable(table, conf)
             else:
                 # table exists, check columns
-                for index, column in  enumerate(self.tableInfo(table)):
-                    if column[1] != list(conf.keys())[index]
-                        8
-                exit()
+                # enumerate(self.tableInfo(table))
+                for index, column_key in enumerate(conf):
+                    print(self.tableInfo(table))
+                    exit()
+                    # if not column_key in 
+                    # if column[1] != list(conf.keys())[index]
+                    pass
+                # exit()
                 
 
         print(self.tables())

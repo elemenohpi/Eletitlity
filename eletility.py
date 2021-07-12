@@ -11,19 +11,19 @@ class DB:
 
     def migrate(self, file):
         content = open(file)
-        data = json.load(content)
-        db_name = data["name"]
+        blueprint_data = json.load(content)
+        db_name = blueprint_data["name"]
         self.connect(db_name)
 
-        for index, table in enumerate(data):
+        for index, table in enumerate(blueprint_data):
             if index == 0:
                 continue
 
             conf = {}
             conf["id"] = "INTEGER PRIMARY KEY"
 
-            for column in data[table]:
-                conf[column] = data[table][column].upper()
+            for column in blueprint_data[table]:
+                conf[column] = blueprint_data[table][column].upper()
 
             # check if the table exists
             if not self.tableExists(table):
@@ -31,23 +31,44 @@ class DB:
                 self.createTable(table, conf)
             else:
                 # table exists, check columns
-                # enumerate(self.tableInfo(table))
-                for index, column_key in enumerate(conf):
-                    print(self.tableInfo(table))
-                    exit()
-                    # if not column_key in 
-                    # if column[1] != list(conf.keys())[index]
-                    pass
-                # exit()
-                
 
-        print(self.tables())
-        exit()
+                table_info = self.tableInfo(table)
+
+                for bp_column in conf:
+                    # print("bppppp_column", bp_column)
+                    found_flag = False
+                    
+                    for db_column_info in table_info:
+                        db_column = db_column_info[1]
+                        # print("db_column", db_column)
+
+                        if bp_column == db_column:
+                            found_flag = True
+                            break
+                    if not found_flag:
+                        # update the table
+                        command = "ALTER TABLE {} ADD {} {}".format(table, bp_column, conf[bp_column])
+                        self.cursor.execute(command)
+                    
+                table_info = self.tableInfo(table)
+                
+                for db_column_info in table_info:
+                        db_column = db_column_info[1]
+
+                        if not db_column in conf.keys():
+                            command = "ALTER TABLE {} DROP COLUMN {}".format(table, db_column)
+                            self.cursor.execute(command)
+
+                # table_info = self.tableInfo(table)
+                # print("table_info", table_info)
+                # if not column_key in 
+                # if column[1] != list(conf.keys())[index]
+                    
+                # exit()
             
     def tableInfo(self, table):
         return self.conn.execute('PRAGMA TABLE_INFO({})'.format(table)).fetchall()
             
-
     def connect(self, db_file):
         """ connects to or creates a database connection to a SQLite database """
         conn = None

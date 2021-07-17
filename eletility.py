@@ -196,7 +196,7 @@ class DB:
             return False
         return True
        
-    def insert(self, table, values, condition="TRUE"):
+    def insert(self, table, values):
         """ inserts a row to a table """
         keys = "("
         vals = "("
@@ -205,8 +205,7 @@ class DB:
             keys += "{}, ".format(key)
         vals = vals[:len(vals)-2] + ")"
         keys = keys[:len(keys)-2] + ")"
-        cmd = "INSERT INTO {} {} VALUES {} WHERE {}".format(table, keys, vals, condition)
-
+        cmd = "INSERT INTO {} {} VALUES {}".format(table, keys, vals)
         self.cursor.execute(cmd)
         self.conn.commit()
 
@@ -480,6 +479,27 @@ class Log:
         self.level = level
         self.prefix = prefix
         pass
+
+    def Gprint(self, msg):
+        print(Colors.OKGREEN, msg, Colors.ENDC, end="")
+
+    def Rprint(self, msg):
+        print(Colors.ERROR, msg, Colors.ENDC, end="")
+
+    def Dprint(self, msg):
+        print(Colors.DEBUG, msg, Colors.ENDC, end="")
+
+    def Yprint(self, msg):
+        print(Colors.WARNING, msg, Colors.ENDC, end="")
+    
+    def Hprint(self, msg):
+        print(Colors.HEADER, msg, Colors.ENDC, end="")
+    
+    def Boldprint(self, msg):
+        print(Colors.BOLD, msg, Colors.ENDC, end="")
+    
+    def Bprint(self, msg):
+        print(Colors.OKBLUE, msg, Colors.ENDC, end="")
 
     def alive_print(self, message):
         for char in message:

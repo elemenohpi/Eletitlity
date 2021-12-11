@@ -4,12 +4,31 @@ import sqlite3
 from sqlite3 import Error
 import json
 
+
 ######################## DB ########################
 class DB:
     def __init__(self):
         pass
 
     def migrate(self, file):
+        """
+        connects to database ["name"] defined inside the file param, creates/updates the table to match the given param
+        blueprint. Does not modify columns if a column with the same name already exits. Drops columns but does not
+        drop tables.
+
+        @param file: an input file describing a database in json format. Example:
+        {
+            "name" : "mydb",
+            "table1" : {
+                            "title" : "text",
+                            "somevalue" : "real"
+                        },
+            "table2" : {
+                            "balance" : "integer",
+                            "somevalue" : "blob"
+                        },
+        }
+        """
         content = open(file)
         blueprint_data = json.load(content)
         db_name = blueprint_data["name"]
@@ -19,8 +38,7 @@ class DB:
             if index == 0:
                 continue
 
-            conf = {}
-            conf["id"] = "INTEGER PRIMARY KEY"
+            conf = {"id": "INTEGER PRIMARY KEY"}
 
             for column in blueprint_data[table]:
                 conf[column] = blueprint_data[table][column].upper()
@@ -31,16 +49,13 @@ class DB:
                 self.createTable(table, conf)
             else:
                 # table exists, check columns
-
                 table_info = self.tableInfo(table)
 
                 for bp_column in conf:
-                    # print("bppppp_column", bp_column)
                     found_flag = False
-                    
+
                     for db_column_info in table_info:
                         db_column = db_column_info[1]
-                        # print("db_column", db_column)
 
                         if bp_column == db_column:
                             found_flag = True
@@ -49,25 +64,24 @@ class DB:
                         # update the table
                         command = "ALTER TABLE {} ADD {} {}".format(table, bp_column, conf[bp_column])
                         self.cursor.execute(command)
-                    
-                table_info = self.tableInfo(table)
-                
-                for db_column_info in table_info:
-                        db_column = db_column_info[1]
 
-                        if not db_column in conf.keys():
-                            command = "ALTER TABLE {} DROP COLUMN {}".format(table, db_column)
-                            self.cursor.execute(command)
+                table_info = self.tableInfo(table)
+
+                for db_column_info in table_info:
+                    db_column = db_column_info[1]
+
+                    if not db_column in conf.keys():
+                        command = "ALTER TABLE {} DROP COLUMN {}".format(table, db_column)
+                        self.cursor.execute(command)
 
                 # table_info = self.tableInfo(table)
                 # print("table_info", table_info)
                 # if not column_key in 
                 # if column[1] != list(conf.keys())[index]
-                    
+
                 # exit()
         # self.createLib(db_name)
 
-            
     # def createLib(self, db_name):
     #     F = Files()
 
@@ -80,10 +94,10 @@ class DB:
     #     # connect to db
     #     content += "DB = ele.DB()\n"
     #     content += "DB.connect('{}')\n\n".format(db_name)
-        
+
     #     libfile = (db_name + "_lib.py")    
     #     F.truncate(libfile)
-        
+
     #     tables = self.tables()
 
     #     for table in tables:
@@ -99,11 +113,8 @@ class DB:
     #         for info in tableInfo:
     #             column = info[1]
 
-                
-
     #         # print(tableInfo)
     #         # exit()
-
 
     #     F.writeLine(libfile, content)
 
@@ -111,7 +122,7 @@ class DB:
 
     def tableInfo(self, table):
         return self.conn.execute('PRAGMA TABLE_INFO({})'.format(table)).fetchall()
-            
+
     def connect(self, db_file):
         """ connects to or creates a database connection to a SQLite database """
         conn = None
@@ -123,7 +134,7 @@ class DB:
         self.conn = conn
         self.cursor = self.conn.cursor()
         return True
-    
+
     def tables(self):
         """ returns a list containing all the table names """
         self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
@@ -136,31 +147,32 @@ class DB:
             if name[0] == key:
                 return True
         return False
-    
+
     def createTable(self, name, conf):
         """ creates a table """
         cmd = "CREATE TABLE IF NOT EXISTS {}(".format(name)
         for key, value in conf.items():
             cmd += "{} {}, ".format(key, value)
-        cmd = cmd[:len(cmd)-2]
+        cmd = cmd[:len(cmd) - 2]
         cmd += ")"
         self.cursor.execute(cmd)
         self.conn.commit()
-    
-    def insertUnique(self, table, values, condition = True):
+
+    def insertUnique(self, table, values, condition=True):
         """ inserts a row to a table if a condition is met """
         keys = "("
         vals = ""
         for key in values:
             vals += "'{}', ".format(values[key])
             keys += "{}, ".format(key)
-        vals = vals[:len(vals)-2] + ""
-        keys = keys[:len(keys)-2] + ")"
-        cmd = "INSERT INTO {0} {1} SELECT {2} WHERE NOT EXISTS (SELECT 1 FROM {0} WHERE {3})".format(table, keys, vals, condition)       
+        vals = vals[:len(vals) - 2] + ""
+        keys = keys[:len(keys) - 2] + ")"
+        cmd = "INSERT INTO {0} {1} SELECT {2} WHERE NOT EXISTS (SELECT 1 FROM {0} WHERE {3})".format(table, keys, vals,
+                                                                                                     condition)
         self.cursor.execute(cmd)
         self.conn.commit()
 
-    def insertUniqueCol(self, table:str, col:str, values:list):
+    def insertUniqueCol(self, table: str, col: str, values: list):
         """ inserts a row to a table if a single condition is met """
         uniqueVal = None
         keys = "("
@@ -170,9 +182,11 @@ class DB:
                 uniqueVal = values[key]
             vals += "'{}', ".format(values[key])
             keys += "{}, ".format(key)
-        vals = vals[:len(vals)-2] + ")"
-        keys = keys[:len(keys)-2] + ")"
-        cmd = "INSERT INTO {0} {1} SELECT {2} WHERE NOT EXISTS (SELECT 1 FROM {0} WHERE {3}='{4}')".format(table, keys, vals, col, uniqueVal)        
+        vals = vals[:len(vals) - 2] + ")"
+        keys = keys[:len(keys) - 2] + ")"
+        cmd = "INSERT INTO {0} {1} SELECT {2} WHERE NOT EXISTS (SELECT 1 FROM {0} WHERE {3}='{4}')".format(table, keys,
+                                                                                                           vals, col,
+                                                                                                           uniqueVal)
         self.cursor.execute(cmd)
         self.conn.commit()
 
@@ -181,13 +195,13 @@ class DB:
         cmd = "SELECT 1 from {0} WHERE {1}".format(table, condition)
         self.cursor.execute(cmd)
         return self.cursor.fetchone()
-        
+
     def selectAll(self, table, condition="TRUE"):
         """ returns all the rows of a given table which meet a given condition """
         cmd = "SELECT * from {0} WHERE {1}".format(table, condition)
         self.cursor.execute(cmd)
         return self.cursor.fetchall()
-    
+
     def rowExists(self, table, condition="TRUE"):
         """ determines if a row exits in a table with a given condition """
         cmd = "SELECT * from {0} WHERE {1}".format(table, condition)
@@ -195,7 +209,7 @@ class DB:
         if len(self.cursor.fetchall()) < 1:
             return False
         return True
-       
+
     def insert(self, table, values):
         """ inserts a row to a table """
         keys = "("
@@ -203,8 +217,8 @@ class DB:
         for key in values:
             vals += "'{}', ".format(values[key])
             keys += "{}, ".format(key)
-        vals = vals[:len(vals)-2] + ")"
-        keys = keys[:len(keys)-2] + ")"
+        vals = vals[:len(vals) - 2] + ")"
+        keys = keys[:len(keys) - 2] + ")"
         cmd = "INSERT INTO {} {} VALUES {}".format(table, keys, vals)
         self.cursor.execute(cmd)
         self.conn.commit()
@@ -214,11 +228,11 @@ class DB:
         keyval = ""
         for key in values:
             keyval += "{} = '{}',".format(key, values[key])
-        keyval = keyval[:len(keyval)-1]
+        keyval = keyval[:len(keyval) - 1]
         cmd = "UPDATE {} SET {} WHERE {}".format(table, keyval, condition)
 
         self.cursor.execute(cmd)
-        self.conn.commit()    
+        self.conn.commit()
 
     def delete(self, table, condition):
         """ deletes row(s) from a given table which meet a given condition """
@@ -232,10 +246,11 @@ class DB:
 class PathHelper:
     def __init__(self):
         pass
-    
+
     def absPath(self, file):
         """ returns the absolute path to a given relative path """
         return os.path.abspath(file)
+
 
 ######################## VALIDATOR ########################
 
@@ -248,13 +263,13 @@ class Validator:
             return True
         elif len(title) > 1:
             return True
-    
+
     def isDesc(self, desc, required=False):
         if not required:
             return True
         elif len(desc) > 1:
             return True
-    
+
     def isStrDate(self, date, format, required=False):
         if not required:
             if len(date) < 1:
@@ -264,7 +279,7 @@ class Validator:
         except ValueError:
             return False
         return True
-    
+
     def isStrYN(self, str, required=False):
         print(str)
         if not required:
@@ -273,7 +288,7 @@ class Validator:
         elif str.lower() == "y" or str.lower() == "n":
             return True
         return False
-    
+
     def isNum(self, str, required=False):
         if not required:
             if len(str) < 1:
@@ -282,12 +297,16 @@ class Validator:
             return True
         return False
 
+
 ######################## STRINGPROC ########################
 
 class StringProc:
-    pass        
+    pass
+
 
 # def create_connection(path):
+
+
 #     connection = None
 #     try:
 #         connection = sqlite3.connect(path)
@@ -370,13 +389,14 @@ class Files:
         return 1
         pass
 
+
 ########################## Times ##########################
 
 class Times:
     def __init__(self):
         """ Date time helper functions"""
         pass
-    
+
     def monthS2N(self, month):
         """ converts a month string to its corresponding numberical value """
         month = month.lower()
@@ -419,25 +439,28 @@ class Times:
         diff = endDateTime - startDateTime
         return diff
 
+
 ########################## ConfigParser ##########################
 
 class ConfigParser:
     """ Config parser constructor """
+
     def __init__(self):
         pass
-    
+
     """ reads from a given config file and returns a list of the arguements """
+
     def read(self, path):
         config = {}
         try:
             file = open(path, 'r')
         except IOError as e:
             raise Exception(e.strerror)
-        
+
         lines = file.readlines()
         for num, line in enumerate(lines):
             line = line.split("#")[0].strip()
-            
+
             if len(line) == 0:
                 # empty line, ignore
                 continue
@@ -452,8 +475,9 @@ class ConfigParser:
                 else:
                     # legal format
                     config[tokens[0].strip()] = tokens[1].strip()
-        
+
         return config
+
 
 ########################## Colors ##########################
 
@@ -467,6 +491,7 @@ class Colors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
 
 ########################## Log ##########################
 
@@ -493,54 +518,55 @@ class Log:
 
     def Yprint(self, msg):
         print(Colors.WARNING, msg, Colors.ENDC, end="")
-    
+
     def Hprint(self, msg):
         print(Colors.HEADER, msg, Colors.ENDC, end="")
-    
+
     def Boldprint(self, msg):
         print(Colors.BOLD, msg, Colors.ENDC, end="")
-    
+
     def Bprint(self, msg):
         print(Colors.OKBLUE, msg, Colors.ENDC, end="")
 
     def alive_print(self, message):
         for char in message:
             print(char, end="", flush=True)
-            time.sleep(0.03)     
-        print("")       
+            time.sleep(0.03)
+        print("")
 
     def D(self, message):
-        time = Times().now() 
+        time = Times().now()
         if not self.prefix is None:
             message = "{}:{}".format(self.prefix, message)
         message = "{}:{}".format(time, message)
         if self.level == "debug":
             print(Colors.DEBUG, message, Colors.ENDC)
-    
+
     def W(self, message):
-        time = Times().now() 
+        time = Times().now()
         if not self.prefix is None:
             message = "{}:{}".format(self.prefix, message)
         message = "{}:{}".format(time, message)
         if self.level == "warning" or "debug" or "info":
             print(Colors.WARNING, message, Colors.ENDC)
-    
+
     def I(self, message):
-        time = Times().now() 
+        time = Times().now()
         if not self.prefix is None:
             message = "{}:{}".format(self.prefix, message)
         message = "{}:{}".format(time, message)
         if self.level == "warning" or "debug" or "info":
             print(Colors.OKGREEN, message, Colors.ENDC)
-    
+
     def E(self, message):
-        time = Times().now() 
+        time = Times().now()
         if not self.prefix is None:
             message = "{}:{}".format(self.prefix, message)
         message = "{}:ERROR:{}".format(time, message)
         if self.level == "warning" or "debug" or "info":
             print(Colors.ERROR, message, Colors.ENDC)
         exit()
+
 
 ########################## List ##########################
 

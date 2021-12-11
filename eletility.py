@@ -320,7 +320,9 @@ class Files:
             f.write("\n")
         except IOError:
             if create:
+                print("dd")
                 f = open(file, "w+")
+                print("ss")
                 f.write(str)
                 f.write("\n")
                 f.close()

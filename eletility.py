@@ -325,7 +325,7 @@ class Files:
             f.truncate()
         except IOError:
             if create:
-                f = open(file, "w+")
+                f = open(file, "w")
                 f.close()
                 return 1
             return 0
